@@ -1,0 +1,414 @@
+<<include=F>>=
+opts_chunk$set(echo=T, eval=F, cache=F, tidy=F, size='footnotesize')
+## tidy.opts=list(keep.blank.line=T, width.cutoff=50)
+options(width=50)
+@
+
+\documentclass[10pt]{beamer}
+
+\input{style.tex}
+
+\usepackage{engord}
+\usepackage{amsmath}
+\usetheme{Pittsburgh}
+
+%% \usepackage[T1]{fontenc}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+%% \usepackage{url}
+%% \ifx\hypersetup\undefined
+%%   \AtBeginDocument{%
+%%     \hypersetup{unicode=true,pdfusetitle,
+%%  bookmarks=true,bookmarksnumbered=false,bookmarksopen=false,
+%%  breaklinks=false,pdfborder={0 0 0},backref=false,colorlinks=false}
+%%   }
+%% \else
+%%   \hypersetup{unicode=true,pdfusetitle,
+%%  bookmarks=true,bookmarksnumbered=false,bookmarksopen=false,
+%%  breaklinks=false,pdfborder={0 0 0},backref=false,colorlinks=false}
+%% \fi
+%% \usepackage{breakurl}
+
+\newcommand\BackgroundPicture[2]{%
+    \setbeamertemplate{background}{%
+    \parbox[c][\paperheight]{\paperwidth}{%
+ \includegraphics[width=#2\paperwidth]{#1}
+         \hfill \vfill
+      }}}
+  
+\makeatletter
+
+%% \usetheme{Singapore}
+
+\makeatother
+
+
+\usecolortheme[RGB={28,152,196}]{structure}
+\useinnertheme{circles}
+
+\setbeamercolor{block title}{fg=white,bg=logo-blue}
+\setbeamertemplate{navigation symbols}{}
+\setbeamerfont{frametitle}{family=\omnes,series=\bfseries}
+\setbeamerfont{section in toc}{family=\omnes,series=\bfseries}
+
+\usefonttheme{professionalfonts} % using non standard fonts for beamer
+\usefonttheme{serif} % default family is serif
+
+%\usepackage{mathptmx}
+\usepackage{graphics}
+\usepackage[english]{babel}
+\usepackage{hhline}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{rotating}
+\usepackage[perpage,para,symbol*]{footmisc}
+
+\newcommand{\reporttitle}{
+\omnes Taking control of graphics using R
+}
+
+
+%% \setbeamertemplate{footline}{
+%%    \begin{beamercolorbox}[ht=5ex,leftskip=1.4cm,rightskip=1.4cm]{default text}
+%%     This presentation is not for publication, release or quotation in any form without prior written approval from the MPI Chief Scientist and the authors.
+%%    \end{beamercolorbox}
+%%    \vspace*{0.4cm}
+%% } 
+
+
+%% \title[R programming]{\textbf{Taking control of graphics using R}}
+%% \author{\vspace{0.5cm} \\ Yvan Richard}
+%% \pgfdeclareimage[width=2cm]{dragonfly}{figures/Dragonfly-logo-RGB}
+%% \institute{\vspace{0.5cm} \\ \includegraphics[width=3cm]{figures/Dragonfly-logo-RGB}}
+
+\date[Wellington R-Users Group]{March 17, 2014}
+
+\begin{document}
+\begin{frame}{}
+\begin{center}
+\vfill
+{\bf\Large 
+\reporttitle} \\
+\vspace{1cm}
+Yvan Richard \\
+\vspace{0.5cm}
+Wellington R-Users Group \\
+17 March 2014  \\
+\vspace{1cm}
+\includegraphics[width=0.4\textwidth]{logo.eps}\\
+\vfill
+\end{center}
+\end{frame}
+
+%% \setbeamertemplate{footline}{
+%%    \begin{beamercolorbox}[ht=3ex,leftskip=0.8cm,rightskip=0.8cm]{default text}
+%%        \raisebox{-0.30\height}{\includegraphics[width=0.18\textwidth]{logo.eps}}
+%%            \hfill
+%%        \omnes DRAFT ONLY - not to be  quoted 
+%%    \end{beamercolorbox}
+%%    \vspace*{0.1cm}
+%% } 
+
+\section[Outline]{}
+\begin{frame}{Outline}
+    \tableofcontents
+\end{frame}
+
+
+%% \begin{document}
+
+%% \frame{\titlepage}
+
+
+\begin{frame}[plain]
+\begin{center}
+  \includegraphics[height=1\textheight]{figures/transport-connections.pdf}  
+  \end{center}
+\end{frame}
+
+
+\begin{frame}[fragile]{\textbf{Organisation}}
+Separation of data preparation and plot generation
+
+Link the whole process using a makefile:
+
+\begin{small}
+  \begin{verbatim}
+all: plot_dir/the_plot.png
+
+plot_dir/the_plot.png: data_dir/the_data.rdata \
+                       plot_dir/create_plot.r
+       cd plot_dir && Rscript create_plot.r
+
+data_dir/the_data.rdata: data_dir/prepare_data.r \
+                         data_dir/raw_data.csv
+       cd data_dir && Rscript prepare_data.r
+\end{verbatim}
+  \end{small}
+\end{frame}  
+
+\section{Data preparation}
+
+\begin{frame}
+  Several sources:
+  \begin{itemize}
+  \item GIS shapefiles (NZ coastline, road networks)
+  \item Spreadsheet with port locations and position tweaks (manual)
+  \item Spreadsheets with import/export values and volumes
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \textbf{Data - shapefiles}}
+<<>>=
+library(rgdal)
+nz <- readOGR("gis_folder", "nz-coastline", 
+              p4s="+init=epsg:4326")  ## lat/long projection
+## Project to NZTM (in metres)
+nz <- spTransform(nz, CRS("+init=epsg:2193"))
+## Saves as .shp if needed
+writeOGR(nz, ".", "nz-coastline-nztm", "ESRI Shapefile") 
+
+## Fortify - Converts spatial object to a data frame of 
+##  x and y coordinates usable by ggplot
+library(ggplot2)
+nz <- fortify(nz)
+save(nz, file='nz-coastline-nztm.rdata')
+@ 
+\end{frame}
+
+
+\begin{frame}[fragile]{\textbf{Data - spreadsheets}}
+\begin{center}
+  \includegraphics[width=0.5\textwidth]{figures/coordinates_table.png}
+\end{center}
+<<>>=
+ports_loc <- read.csv('ports-locations.csv', as.is=T)
+
+library(sp)
+coordinates(ports_loc) <- ~ x + y
+proj4string(ports_loc) <- "+init=epsg:4326"
+ports_loc <- as.data.frame(spTransform(ports_loc, CRS("+init=epsg:2193")))
+@ 
+\end{frame}
+
+
+
+\begin{frame}{\textbf{Data - preparation} }
+  Normalise data to have only one row per ``point''
+  
+  Not: 
+  \begin{center}
+  \includegraphics[scale=0.4]{figures/denorm.png}
+\end{center}
+But:
+\begin{center}
+  \includegraphics[scale=0.4]{figures/norm.png}
+\end{center}
+Obtained using
+<<>>=
+library(reshape2)
+
+melt(data, id.vars='Region', variable.name='year')
+@ 
+\end{frame}
+
+
+\section{Plotting}
+
+
+\begin{frame}[fragile]
+    \frametitle{Spatial objects}
+Plot NZ coastline, and road networks:
+<<>>=
+p <- qplot(xlims, ylims, geom = "blank") +
+    geom_polygon(aes(x=long, y=lat, group=id), fill=colour_nz, colour=NA, 
+                 data=nz) +
+    geom_path(aes(x=long, y=lat, group=group), data=hightraff, 
+              size=2.5*size_large_roads, colour='black') +
+    geom_path(aes(x=long, y=lat, group=group, colour=traff), data=traff, 
+              size=size_large_roads) +
+    scale_colour_manual(values = routes_cols, guide='none') + 
+    coord_fixed(ratio=1, xlim=xlims, ylim=ylims) +
+    theme_blank()
+@ 
+\begin{scriptsize}
+\texttt{xlims, ylims, colour\_nz, size\_large\_roads} are variables defined at the
+beginning of script.
+
+\texttt{routes\_cols} is a named vector relating discrete values of route traffic to
+their colour
+  \end{scriptsize}
+\end{frame}
+
+
+\section{Subplots}
+
+\begin{frame}
+\begin{center}
+  \includegraphics[width=1\textwidth]{figures/subplot-1.png}
+\end{center}
+\end{frame}
+
+\begin{frame}
+  Without theme
+\begin{center}
+  \includegraphics[width=1\textwidth]{figures/subplot-no-theme.png}
+\end{center}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Viewports}
+  Three viewports
+\begin{center}
+  \includegraphics[width=1\textwidth]{figures/subplot-viewports.png}
+\end{center}
+
+\begin{small}
+\begin{verbatim}
+pushViewport(
+  viewport(layout = grid.layout(1, 3, 
+    widths = unit(c(bars_rel_max_width, 1, bars_rel_max_width), 
+      rep('grobwidth',3), list(plane_grob, plane_grob, plane_grob)), 
+    heights = grobHeight(plane_grob))))
+\end{verbatim}
+\end{small}
+\end{frame}
+
+
+\begin{frame}[fragile]{\textbf{ Subplots - viewports }}
+One of the two bar plots:
+<<>>=
+bars_vol <- ggplot(vol, aes(x=import_export, y=value, fill=import_export)) +
+    geom_bar(stat='identity', width=1-gap_between_bars) +
+    scale_fill_manual(guide='none', values=c(import=colour_bar_imp_vol, 
+                                             export=colour_bar_exp_vol)) +
+    coord_flip(ylim=c(0, max.vol)) +  # make bars horizontal and set limits
+    scale_y_continuous(expand=c(0,0)) +  # remove gaps
+    theme_nothing()
+@ 
+Add it to viewport 3:
+<<>>=
+pushViewport(viewport(layout.pos.row = 1, layout.pos.col = 3))
+grid.draw(ggplotGrob(bars_vol))
+upViewport()
+@
+\end{frame}
+
+
+\begin{frame}[fragile]{\textbf{ Adding subplot to main plot }}
+\vspace{-0.5cm}
+\begin{center}
+  \includegraphics[width=0.5\textwidth]{figures/adding-subplot.png}
+\end{center}
+\vspace{-0.5cm}
+<<>>=
+subplot <- grid.grabExpr({
+              pushViewport(...)
+              grid.draw(...)
+              ... })
+
+subplot_width <- (2*bars_rel_max_width + 1)*subplot_size
+
+p1 <- p + annotation_custom(subplot, 
+            xmin = loc_x - subplot_width/2, xmax = loc_x + subplot_width/2,
+            ymin = loc_y - subplot_size/2, ymax = loc_y + subplot_size/2)
+@
+\end{frame}
+
+
+\begin{frame}[fragile]{\textbf{ Adding grid objects in user coordinates }}
+
+Example: add a reference scale for the bar plots (a rectangle the width
+of the longest bar)
+
+<<>>=
+g <- ggplot(...)
+print(g)
+
+downViewport('panel.3-4-3-4')
+gb <- ggplot_build(g)
+pushViewport(dataViewport(xscale=gb$panel$ranges[[1]]$x.range,
+                          yscale=gb$panel$ranges[[1]]$y.range,
+                          clip='off'))
+
+grid.rect(x = unit(x_coord, 'native'),
+          y = unit(y_coord, 'native'),
+          width = unit(subplot_size * bars_rel_max_width, 'native'),
+          height = unit(0.5, 'cm'))
+@ 
+\end{frame}
+
+
+\begin{frame}[fragile]{\textbf{ Adding grid objects in user coordinates}}
+
+  Grid offers many primitive shapes for adding to plots
+  \begin{itemize}
+  \item grid.rect(), grid.lines(), grid.text(), grid.arrows(), ...
+  \end{itemize}
+
+  \vspace{1cm}
+  Different units can be conveniently combined (i.e. for adding spacing):
+<<>>=
+grid.text(x = unit(coord_x, 'native') + unit(3, 'mm'), ...)
+@ 
+
+\end{frame}
+
+
+\begin{frame}[fragile]{\textbf{ Styling - ggplot}}
+Use \texttt{theme}
+<<>>=
+ggplot(...) +
+  theme(axis.ticks.length = unit(1.5, "mm"),
+        panel.background = element_blank())
+@
+
+Or replace geoms with your own function to use consistent formats:
+<<>>=
+title_text <- function(...) 
+    geom_text(..., size=10, family='Helvetica',lineheight=0.8)
+
+ggplot(...) + title_text('This is a title')
+@ 
+\end{frame}
+
+
+\begin{frame}[fragile]{\textbf{ Styling - grid }}
+Use \texttt{gpar}
+<<>>=
+grid.rect(gp = gpar(col='red', fill=NA, lwd=2))
+@
+
+Also make use of functions for consistency
+<<>>=
+gpar_title <- function(...) 
+    gpar(fontsize=10, fontfamily='Helvetica', lineheight=0.8, ...)
+
+grid.text('This is a title', gp=gpar_title())
+@ 
+ 
+\end{frame}
+
+
+
+\begin{frame}{\textbf{ Benefits } }
+Yes, it is not very easy, but:
+
+  \begin{itemize}
+  \item Scripts are easy to re-use and adapt
+  \item Possibilities almost infinite
+  \item Transparent
+  \item Robust link between data and plots
+  \item Easy to update with new data
+  \item Try doing this in Excel...
+  \end{itemize}
+\end{frame}
+
+
+\end{document}
+
+
+
