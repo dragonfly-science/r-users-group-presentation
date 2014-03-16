@@ -100,14 +100,12 @@ Wellington R-Users Group \\
 \end{center}
 \end{frame}
 
-%% \setbeamertemplate{footline}{
-%%    \begin{beamercolorbox}[ht=3ex,leftskip=0.8cm,rightskip=0.8cm]{default text}
-%%        \raisebox{-0.30\height}{\includegraphics[width=0.18\textwidth]{logo.eps}}
-%%            \hfill
-%%        \omnes DRAFT ONLY - not to be  quoted 
-%%    \end{beamercolorbox}
-%%    \vspace*{0.1cm}
-%% } 
+\setbeamertemplate{footline}{
+   \begin{beamercolorbox}[ht=3ex,leftskip=0.8cm,rightskip=0.8cm]{default text}
+       \raisebox{0.30\height}{\includegraphics[width=0.18\textwidth]{logo.eps}}
+   \end{beamercolorbox}
+   \vspace*{0.1cm}
+} 
 
 \section[Outline]{}
 \begin{frame}{Outline}
@@ -125,6 +123,14 @@ Wellington R-Users Group \\
   \includegraphics[height=1\textheight]{figures/transport-connections.pdf}  
   \end{center}
 \end{frame}
+
+\setbeamertemplate{headline}{
+   \vspace*{1.05cm}
+   \begin{beamercolorbox}[ht=3ex,leftskip=0.8cm,rightskip=2.2cm]{default text}
+       \hfill \color{logo-blue}\bf\omnes \insertsection
+   \end{beamercolorbox}
+} 
+
 
 
 \begin{frame}[fragile]{\textbf{Organisation}}
@@ -160,7 +166,7 @@ data_dir/the_data.rdata: data_dir/prepare_data.r \
 
 
 \begin{frame}[fragile]
-  \textbf{Data - shapefiles}}
+  \textbf{Data - shapefiles}
 <<>>=
 library(rgdal)
 nz <- readOGR("gis_folder", "nz-coastline", 
@@ -196,8 +202,7 @@ ports_loc <- as.data.frame(spTransform(ports_loc, CRS("+init=epsg:2193")))
 
 
 \begin{frame}{\textbf{Data - preparation} }
-  Normalise data to have only one row per ``point''
-  
+  Normalise data to have only one row per ``point''\\
   Not: 
   \begin{center}
   \includegraphics[scale=0.4]{figures/denorm.png}
@@ -206,7 +211,6 @@ But:
 \begin{center}
   \includegraphics[scale=0.4]{figures/norm.png}
 \end{center}
-Obtained using
 <<>>=
 library(reshape2)
 
@@ -235,8 +239,9 @@ p <- qplot(xlims, ylims, geom = "blank") +
 @ 
 \begin{scriptsize}
 \texttt{xlims, ylims, colour\_nz, size\_large\_roads} are variables defined at the
-beginning of script.
+beginning of script.\\
 
+\vspace{0.3cm}
 \texttt{routes\_cols} is a named vector relating discrete values of route traffic to
 their colour
   \end{scriptsize}
