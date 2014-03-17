@@ -529,7 +529,7 @@ grid.text('This is a title', gp=gpar_title())
   
   This presentation and a self-contained project for making the main plot are publicly available on GitHub:
   
-  \textbf{https://github.com/dragonfly-science/r-users-group-presentation.git}
+  \textbf{https://github.com/dragonfly-science/r-users-group-presentation}
   
   \vspace{1cm}
   
