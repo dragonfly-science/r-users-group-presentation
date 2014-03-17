@@ -1,0 +1,38 @@
+#NAME?,"<?xml version=""1.0""?><WebTableParameter xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" xmlns=""""><DataTable Code=""TABLECODE7302"" HasMetadata=""true""><Name LocaleIsoCode=""en"">Imports for Overseas Cargo (cif NZ$): New Zealand Port by Country of Origin, Commodity (HS2) and Period</Name><Dimension Code=""COUNTRY"" Display=""labels""><Name LocaleIsoCode=""en"">Country of Origin</Name><Member Code=""00""><Name LocaleIsoCode=""en"">Total</Name></Member></Dimension><Dimension Code=""COMMODITY"" HasMetadata=""true"" Display=""labels""><Name LocaleIsoCode=""en"">Commodity</Name><Member Code=""00""><Name LocaleIsoCode=""en"">Total</Name></Member></Dimension><Dimension Code=""PERIOD"" HasMetadata=""true"" Display=""labels""><Name LocaleIsoCode=""en"">Period</Name><Member Code=""2013"" HasOnlyUnitMetadata=""false""><Name LocaleIsoCode=""en"">2013 Year</Name></Member></Dimension><Dimension Code=""NZPORT"" Display=""labels""><Name LocaleIsoCode=""en"">NZ Port</Name><Member Code=""TOTALX""><Name LocaleIsoCode=""en"">Total</Name><ChildMember Code=""NZWRE1""><Name LocaleIsoCode=""en"">Whangarei</Name></ChildMember><ChildMember Code=""NZAKL1""><Name LocaleIsoCode=""en"">Auckland Seaport</Name></ChildMember><ChildMember Code=""NZTRG1""><Name LocaleIsoCode=""en"">Tauranga Seaport</Name></ChildMember><ChildMember Code=""NZGIS1""><Name LocaleIsoCode=""en"">Gisborne</Name></ChildMember><ChildMember Code=""NZNPL1""><Name LocaleIsoCode=""en"">New Plymouth</Name></ChildMember><ChildMember Code=""NZNPE1""><Name LocaleIsoCode=""en"">Napier</Name></ChildMember><ChildMember Code=""NZWLG1""><Name LocaleIsoCode=""en"">Wellington Seaport</Name></ChildMember><ChildMember Code=""NZNSN1""><Name LocaleIsoCode=""en"">Nelson</Name></ChildMember><ChildMember Code=""NZPCN1""><Name LocaleIsoCode=""en"">Picton</Name></ChildMember><ChildMember Code=""NZWSZ1""><Name LocaleIsoCode=""en"">Westport</Name></ChildMember><ChildMember Code=""NZCHC1""><Name LocaleIsoCode=""en"">Christchurch Seaport (Lyttelton)</Name></ChildMember><ChildMember Code=""NZTIU1""><Name LocaleIsoCode=""en"">Timaru</Name></ChildMember><ChildMember Code=""NZDUD1""><Name LocaleIsoCode=""en"">Dunedin Seaport</Name></ChildMember><ChildMember Code=""NZIVC1""><Name LocaleIsoCode=""en"">Invercargill Seaport (Bluff)</Name></ChildMember><ChildMember Code=""NZAKL4""><Name LocaleIsoCode=""en"">Auckland Airport</Name></ChildMember><ChildMember Code=""NZHLZ4""><Name LocaleIsoCode=""en"">Hamilton Airport</Name></ChildMember><ChildMember Code=""NZWLG4""><Name LocaleIsoCode=""en"">Wellington Airport</Name></ChildMember><ChildMember Code=""NZCHC4""><Name LocaleIsoCode=""en"">Christchurch Airport</Name></ChildMember><ChildMember Code=""NZDUD4""><Name LocaleIsoCode=""en"">Dunedin Airport</Name></ChildMember><ChildMember Code=""NZPPP5""><Name LocaleIsoCode=""en"">Parcel Post</Name></ChildMember><ChildMember Code=""NZVARX"" HasMetadata=""true""><Name LocaleIsoCode=""en"">NZ Various</Name></ChildMember><ChildMember Code=""NZTRG4""><Name LocaleIsoCode=""en"">Tauranga Airport</Name></ChildMember><ChildMember Code=""NZTHH1""><Name LocaleIsoCode=""en"">Taharoa</Name></ChildMember><ChildMember Code=""NZGMN1""><Name LocaleIsoCode=""en"">Greymouth</Name></ChildMember><ChildMember Code=""NZWNP4""><Name LocaleIsoCode=""en"">Whenuapai Airport</Name></ChildMember><ChildMember Code=""NZOHA4""><Name LocaleIsoCode=""en"">Ohakea Airport</Name></ChildMember><ChildMember Code=""NZIVC4""><Name LocaleIsoCode=""en"">Invercargill Airport</Name></ChildMember></Member></Dimension><Tabulation Axis=""horizontal""><Dimension Code=""COUNTRY"" /><Dimension Code=""COMMODITY"" /><Dimension Code=""PERIOD"" /></Tabulation><Tabulation Axis=""vertical""><Dimension Code=""NZPORT"" /></Tabulation><Tabulation Axis=""page"" /><Formatting><Labels LocaleIsoCode=""en"" /><Power>0</Power><Decimals>-1</Decimals><SkipEmptyLines>false</SkipEmptyLines><FullyFillPage>false</FullyFillPage><SkipEmptyCols>false</SkipEmptyCols><SkipLineHierarchy>true</SkipLineHierarchy><SkipColHierarchy>true</SkipColHierarchy><Page>1</Page></Formatting></DataTable><Format><ShowEmptyAxes>true</ShowEmptyAxes><Page>1</Page><EnableSort>true</EnableSort><IncludeFlagColumn>false</IncludeFlagColumn><IncludeTimeSeriesId>false</IncludeTimeSeriesId><DoBarChart>false</DoBarChart><FreezePanes>true</FreezePanes><MaxBarChartLen>65</MaxBarChartLen></Format><Query><AbsoluteUri>http://nzdotstat.stats.govt.nz/wbos/View.aspx?QueryId=&amp;QueryType=Public&amp;Lang=en</AbsoluteUri></Query></WebTableParameter>",,,,,,,,,
+"Dataset: Imports for Overseas Cargo (cif NZ$): New Zealand Port by Country of Origin, Commodity (HS2) and Period",,,,,,,,,,
+Country of Origin,,Total,,,,,,,,
+Commodity,,Total,,Value adjusted for transhipments,,,,Tonnage,,Tonnage adjusted for transhipments
+Period,,2013 Year,,Millions,,,,(000),,(tonnes 000)
+NZ Port,,,,,,,,,,
+Total,,,,,,,,,,
+  Whangarei,,5634618742,,5634.62,,,,5443.6,,5443.6
+  Auckland Seaport,,19233349913,,18630.8,,,,4559.4,,4373.7
+  Tauranga Seaport,,4756470759,,4756.5,,,,3725.5,,3725.5
+  Gisborne,,21812,,0.02,,,,0.0,,0.0
+  New Plymouth,,565834025,,609.0,,,,645.9,,659.2
+  Napier,,547669983,,911.3,,,,462.1,,573.4
+  Wellington Seaport,,2150417315,,2202.2,,,,941.4,,957.4
+  Nelson,,258373499,,286.9,,,,135.6,,144.4
+  Picton,,1864683,,1.86,,,,28.8,,28.8
+  Westport,,..,,0.00,,,,,,0.0
+  Christchurch Seaport (Lyttelton),,4011588361,,4044.3,,,,2131.1,,2141.0
+  Timaru,,248916130,,248.9,,,,460.6,,460.6
+  Dunedin Seaport,,396041176,,218.9,,,,270.5,,216.1
+  Invercargill Seaport (Bluff),,554932797,,819.1,,,,1271.5,,1352.3
+  Auckland Airport,,9179484879,,9179.48,,,,85.2,,85.2
+  Hamilton Airport,,210350,,0.21,,,,0.0,,0.0
+  Wellington Airport,,31568957,,31.57,,,,0.5,,0.5
+  Christchurch Airport,,630548682,,630.55,,,,7.1,,7.1
+  Dunedin Airport,,75029,,0.08,,,,,,0.0
+  Parcel Post,,23870393,,23.87,,,,,,0.0
+  NZ Various,,..,,0.00,,,,,,0.0
+  Tauranga Airport,,..,,0.00,,,,,,0.0
+  Taharoa,,..,,0.00,,,,,,0.0
+  Greymouth,,5514,,0.01,,,,,,0.0
+  Whenuapai Airport,,..,,0.00,,,,,,0.0
+  Ohakea Airport,,11000477,,11.00,,,,,,0.0
+  Invercargill Airport,,..,,0.00,,,,,,0.0
+data extracted on 28 Feb 2014 03:27 UTC (GMT) from NZ.Stat,,,,,,,,,,
+,,48236863476,,48241.32,,,,20168.9,,20168.9
+,,,,,,,,,,
+,,,,Unaffected,,,,,,

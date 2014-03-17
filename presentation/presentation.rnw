@@ -1,7 +1,9 @@
 <<include=F>>=
 opts_chunk$set(echo=T, eval=F, cache=F, tidy=F, size='footnotesize')
 ## tidy.opts=list(keep.blank.line=T, width.cutoff=50)
-options(width=50)
+options(width=50, warnPartialMatchDollar=F)
+library(ggplot2)
+library(grid)
 @
 
 \documentclass[10pt]{beamer}
@@ -11,6 +13,7 @@ options(width=50)
 \usepackage{engord}
 \usepackage{amsmath}
 \usetheme{Pittsburgh}
+
 
 %% \usepackage[T1]{fontenc}
 \setcounter{secnumdepth}{3}
@@ -35,7 +38,9 @@ options(width=50)
  \includegraphics[width=#2\paperwidth]{#1}
          \hfill \vfill
       }}}
-  
+
+\newcommand{\rlogo}{\includegraphics[height=\baselineskip]{figures/R-logo.png}}
+
 \makeatletter
 
 %% \usetheme{Singapore}
@@ -68,18 +73,6 @@ options(width=50)
 }
 
 
-%% \setbeamertemplate{footline}{
-%%    \begin{beamercolorbox}[ht=5ex,leftskip=1.4cm,rightskip=1.4cm]{default text}
-%%     This presentation is not for publication, release or quotation in any form without prior written approval from the MPI Chief Scientist and the authors.
-%%    \end{beamercolorbox}
-%%    \vspace*{0.4cm}
-%% } 
-
-
-%% \title[R programming]{\textbf{Taking control of graphics using R}}
-%% \author{\vspace{0.5cm} \\ Yvan Richard}
-%% \pgfdeclareimage[width=2cm]{dragonfly}{figures/Dragonfly-logo-RGB}
-%% \institute{\vspace{0.5cm} \\ \includegraphics[width=3cm]{figures/Dragonfly-logo-RGB}}
 
 \date[Wellington R-Users Group]{March 17, 2014}
 
@@ -91,6 +84,7 @@ options(width=50)
 \reporttitle} \\
 \vspace{1cm}
 Yvan Richard \\
+yvan@dragonfly.co.nz \\
 \vspace{0.5cm}
 Wellington R-Users Group \\
 17 March 2014  \\
@@ -113,16 +107,78 @@ Wellington R-Users Group \\
 \end{frame}
 
 
-%% \begin{document}
 
-%% \frame{\titlepage}
 
+\section{Examples of advanced plots in pure R}
+
+\begin{frame}
+  \textbf{Some examples of plots I created for the New Zealand Ministry of
+    Business, Innovation \& Employment}
+  \begin{itemize}
+  \item All made using programming only (except logos)
+  \item Only using \rlogo
+  \item The scripts will be made public after report completion
+  \end{itemize}
+\end{frame} 
+ 
+\begin{frame}[plain]
+\begin{center}
+  \includegraphics[width=1\textwidth]{figures/annual-employment-growth-leed.pdf}  
+  \end{center}
+\end{frame}
 
 \begin{frame}[plain]
 \begin{center}
-  \includegraphics[height=1\textheight]{figures/transport-connections.pdf}  
+  \includegraphics[height=1\textheight]{figures/international-visitor-spending-cagr_tourism.pdf}  
   \end{center}
 \end{frame}
+
+\begin{frame}[plain]
+\begin{center}
+  \includegraphics[height=1\textheight]{figures/gdp-travel-time_grid.pdf}  
+  \end{center}
+\end{frame}
+
+\begin{frame}[plain]
+\begin{center}
+  \includegraphics[height=1\textheight]{figures/tla-population-change_2013-2031.pdf}  
+  \end{center}
+\end{frame}
+
+\begin{frame}[plain]
+\begin{center}
+  \includegraphics[height=1\textheight]{figures/electricity-use-and-demand.pdf}  
+  \end{center}
+\end{frame}
+
+\begin{frame}[plain]
+\begin{center}
+  \includegraphics[height=1\textheight]{figures/transport-connections.png}  
+  \end{center}
+\end{frame}
+
+
+
+\begin{frame}
+  \frametitle{Programming VS. hand drawing}
+
+    Programming may seem tedious but
+    \begin{itemize}
+    \item Plots are easy to update with new data
+    \item Code is easy to re-use and adapt (use \textbf{GNU make} for work flow management)
+    \item Possibilities almost infinite
+    \item Easily scalable (no difference between 5 regions or 10,000)
+    \item Changes are easy to track (use \textbf{GIT} for version control)
+    \item Transparent
+    \item Insurance of correctness
+      \begin{itemize}
+      \item No hand tweaking of e.g. bubble sizes or region colour
+      \item What you see is directly from the original data
+      \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
 
 \setbeamertemplate{headline}{
    \vspace*{1.05cm}
@@ -132,30 +188,61 @@ Wellington R-Users Group \\
 } 
 
 
+\section{Improving from R base graphics}
 
-\begin{frame}[fragile]{\textbf{Organisation}}
-Separation of data preparation and plot generation
+\begin{frame}[fragile]
+  \frametitle{Simple R graphics}
+  
+Simple plots in R are quick and easy, but ugly... %%\\ \vspace{-1cm}
+<<eval=T, fig.width=6, fig.height=3, out.width='0.7\\textwidth'>>=
+par(mar=c(4,4,.5,.5))
+matplot(apply(matrix(rnorm(500), nrow=5), 1, cumsum), 
+        xlab='Time', ylab='Value', type='l')
+@ 
+\end{frame}
 
-Link the whole process using a makefile:
 
-\begin{small}
-  \begin{verbatim}
-all: plot_dir/the_plot.png
+\begin{frame}[fragile]
+  \frametitle{Improved R graphics}
+Large improvement thanks to \textbf{ggplot2} from Hadley Wickham, \\
+but it voluntarily lacks flexibility.
+<<eval=T, fig.width=6, fig.height=3, out.width='0.7\\textwidth'>>=
+library(ggplot2)
+ggplot(mtcars, aes(x=wt, y=mpg, col=factor(cyl))) + geom_point() + 
+    geom_smooth(aes(group=cyl), method='lm') + 
+    theme(plot.margin=unit(c(0,0,0,0),'line'))
+@ 
+\end{frame}
 
-plot_dir/the_plot.png: data_dir/the_data.rdata \
-                       plot_dir/create_plot.r
-       cd plot_dir && Rscript create_plot.r
-
-data_dir/the_data.rdata: data_dir/prepare_data.r \
-                         data_dir/raw_data.csv
-       cd data_dir && Rscript prepare_data.r
-\end{verbatim}
-  \end{small}
-\end{frame}  
-
-\section{Data preparation}
 
 \begin{frame}
+  \frametitle{Customised R graphics}
+ 
+  Customisation is needed when:
+  \begin{itemize}
+  \item A specific style or design is required (client, journal, organisation...)
+  \item Fitting a lot of information in a single figure
+  \item Plots are infographics
+  \end{itemize}
+  
+  Many libraries are available. See http://cran.r-project.org/web/views/Graphics.html
+  
+  Focus here on ggplot2 and grid, and a single plot
+\end{frame}
+
+
+\begin{frame}[plain]
+\begin{center}
+  \includegraphics[height=1\textheight]{figures/transport-connections.png}  
+  \end{center}
+\end{frame}
+
+
+
+\section{Data}
+
+\begin{frame}
+  \frametitle{Preparation}
   Several sources:
   \begin{itemize}
   \item GIS shapefiles (NZ coastline, road networks)
@@ -166,15 +253,13 @@ data_dir/the_data.rdata: data_dir/prepare_data.r \
 
 
 \begin{frame}[fragile]
-  \textbf{Data - shapefiles}
+  \frametitle{Shapefiles}
 <<>>=
 library(rgdal)
 nz <- readOGR("gis_folder", "nz-coastline", 
               p4s="+init=epsg:4326")  ## lat/long projection
 ## Project to NZTM (in metres)
 nz <- spTransform(nz, CRS("+init=epsg:2193"))
-## Saves as .shp if needed
-writeOGR(nz, ".", "nz-coastline-nztm", "ESRI Shapefile") 
 
 ## Fortify - Converts spatial object to a data frame of 
 ##  x and y coordinates usable by ggplot
@@ -185,7 +270,8 @@ save(nz, file='nz-coastline-nztm.rdata')
 \end{frame}
 
 
-\begin{frame}[fragile]{\textbf{Data - spreadsheets}}
+\begin{frame}[fragile]
+  \frametitle{Spreadsheets}
 \begin{center}
   \includegraphics[width=0.5\textwidth]{figures/coordinates_table.png}
 \end{center}
@@ -201,19 +287,31 @@ ports_loc <- as.data.frame(spTransform(ports_loc, CRS("+init=epsg:2193")))
 
 
 
-\begin{frame}{\textbf{Data - preparation} }
-  Normalise data to have only one row per ``point''\\
-  Not: 
-  \begin{center}
-  \includegraphics[scale=0.4]{figures/denorm.png}
-\end{center}
-But:
-\begin{center}
-  \includegraphics[scale=0.4]{figures/norm.png}
-\end{center}
+\begin{frame}[fragile]
+  \frametitle{Spreadsheets}
+  
+  Normalise data to have only one row per ``point''
+  
+  \begin{columns}
+    \column{0.2\textwidth}
+    Not: 
+    \column{0.8\textwidth}
+    \begin{center}
+      \includegraphics[scale=0.4]{figures/denorm.png}
+    \end{center}
+  \end{columns}
+
+  \begin{columns}
+    \column{0.2\textwidth}
+    But: 
+    \column{0.8\textwidth}
+    \begin{center}
+      \includegraphics[scale=0.4]{figures/norm.png}
+    \end{center}
+  \end{columns}
+
 <<>>=
 library(reshape2)
-
 melt(data, id.vars='Region', variable.name='year')
 @ 
 \end{frame}
@@ -223,7 +321,7 @@ melt(data, id.vars='Region', variable.name='year')
 
 
 \begin{frame}[fragile]
-    \frametitle{Spatial objects}
+    \frametitle{Base map}
 Plot NZ coastline, and road networks:
 <<>>=
 p <- qplot(xlims, ylims, geom = "blank") +
@@ -251,12 +349,14 @@ their colour
 \section{Subplots}
 
 \begin{frame}
+  \frametitle{Subplot creation}
 \begin{center}
   \includegraphics[width=1\textwidth]{figures/subplot-1.png}
 \end{center}
 \end{frame}
 
 \begin{frame}
+  \frametitle{Subplot creation}
   Without theme
 \begin{center}
   \includegraphics[width=1\textwidth]{figures/subplot-no-theme.png}
@@ -271,19 +371,24 @@ their colour
   \includegraphics[width=1\textwidth]{figures/subplot-viewports.png}
 \end{center}
 
-\begin{small}
-\begin{verbatim}
+%% \begin{small}
+%% \begin{verbatim}
+<<>>=
+boat_grob <- rasterGrob(readPNG('boat-logo.png'))
+
 pushViewport(
   viewport(layout = grid.layout(1, 3, 
     widths = unit(c(bars_rel_max_width, 1, bars_rel_max_width), 
-      rep('grobwidth',3), list(plane_grob, plane_grob, plane_grob)), 
-    heights = grobHeight(plane_grob))))
-\end{verbatim}
-\end{small}
+      rep('grobwidth',3), list(boat_grob, boat_grob, boat_grob)), 
+    heights = grobHeight(boat_grob))))
+@ 
+
+%% \end{small}
 \end{frame}
 
 
-\begin{frame}[fragile]{\textbf{ Subplots - viewports }}
+\begin{frame}[fragile]
+  \frametitle{Viewports}
 One of the two bar plots:
 <<>>=
 bars_vol <- ggplot(vol, aes(x=import_export, y=value, fill=import_export)) +
@@ -303,7 +408,8 @@ upViewport()
 \end{frame}
 
 
-\begin{frame}[fragile]{\textbf{ Adding subplot to main plot }}
+\begin{frame}[fragile]
+  \frametitle{Adding subplot to main plot}
 \vspace{-0.5cm}
 \begin{center}
   \includegraphics[width=0.5\textwidth]{figures/adding-subplot.png}
@@ -324,7 +430,8 @@ p1 <- p + annotation_custom(subplot,
 \end{frame}
 
 
-\begin{frame}[fragile]{\textbf{ Adding grid objects in user coordinates }}
+\begin{frame}[fragile]
+  \frametitle{Adding grid object in user coordinates}
 
 Example: add a reference scale for the bar plots (a rectangle the width
 of the longest bar)
@@ -347,7 +454,8 @@ grid.rect(x = unit(x_coord, 'native'),
 \end{frame}
 
 
-\begin{frame}[fragile]{\textbf{ Adding grid objects in user coordinates}}
+\begin{frame}[fragile]
+  \frametitle{Adding grid object in user coordinates}
 
   Grid offers many primitive shapes for adding to plots
   \begin{itemize}
@@ -363,8 +471,13 @@ grid.text(x = unit(coord_x, 'native') + unit(3, 'mm'), ...)
 \end{frame}
 
 
-\begin{frame}[fragile]{\textbf{ Styling - ggplot}}
-Use \texttt{theme}
+\section{Styling}
+
+
+\begin{frame}[fragile]
+  \frametitle{Styling with ggplot}
+  
+  Use \texttt{theme}
 <<>>=
 ggplot(...) +
   theme(axis.ticks.length = unit(1.5, "mm"),
@@ -381,7 +494,9 @@ ggplot(...) + title_text('This is a title')
 \end{frame}
 
 
-\begin{frame}[fragile]{\textbf{ Styling - grid }}
+\begin{frame}[fragile]
+\frametitle{Styling with grid}
+
 Use \texttt{gpar}
 <<>>=
 grid.rect(gp = gpar(col='red', fill=NA, lwd=2))
@@ -399,17 +514,27 @@ grid.text('This is a title', gp=gpar_title())
 
 
 
-\begin{frame}{\textbf{ Benefits } }
-Yes, it is not very easy, but:
+\setbeamertemplate{headline}{
+   \vspace*{1.05cm}
+   \begin{beamercolorbox}[ht=3ex,leftskip=0.8cm,rightskip=2.2cm]{default text}
+       \hfill \color{logo-blue}\bf\omnes
+   \end{beamercolorbox}
+} 
 
-  \begin{itemize}
-  \item Scripts are easy to re-use and adapt
-  \item Possibilities almost infinite
-  \item Transparent
-  \item Robust link between data and plots
-  \item Easy to update with new data
-  \item Try doing this in Excel...
-  \end{itemize}
+
+\begin{frame}
+  \frametitle{Thank you}
+  
+  This presentation and a self-contained project for making the main plot are publicly available on GitHub:
+  
+  \textbf{https://github.com/dragonfly-science/r-users-group-presentation.git}
+  
+  \vspace{1cm}
+  
+  Thank you to the whole R and open-source community to make this possible.
+
+  Main software used: R, LaTeX, Beamer, GNU make, GIT, Emacs
+  
 \end{frame}
 
 
