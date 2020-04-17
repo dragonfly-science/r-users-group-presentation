@@ -1,12 +1,14 @@
 ## Map of main freight routes with import/export value in main ports and airports
 ## Created 20140110 by Y Richard (yvan@dragonfly.co.nz)
 ## Updated 20140304 by Y Richard following correction for transhipments
+## Updated 20200417 by Y Richard to make it work with newer versions of ggplot and grid
 
 library(rgdal)
 library(png)
 library(Cairo)
 library(ggplot2)
 library(grid)
+library(gridExtra)
 source('../helper-functions.r', chdir=T)
 options(warnPartialMatchDollar=F)
 
@@ -56,21 +58,20 @@ ports_loc <- read.csv('ports-locations.csv', as.is=T)
 
 theme_blank <- function(base_size = 12, base_family = font_family) {
     theme_bw(base_size = base_size, base_family = base_family) %+replace%
-    theme(
-        rect = element_blank(),
-        line = element_blank(),
-        axis.ticks.length = unit(0, "cm"),
-        axis.ticks.margin = unit(0, "lines"),
-        axis.text = element_blank(),
-        axis.ticks = element_blank(),
-        axis.title = element_blank(),
-        legend.position = 'none'
+        theme(
+            rect = element_blank(),
+            line = element_blank(),
+            axis.ticks.length = unit(0, "cm"),
+            axis.text = element_blank(),
+            axis.ticks = element_blank(),
+            axis.title = element_blank(),
+            legend.position = 'none'
         )
 }
 
 theme_nothing <- function(base_size = 12, base_family = font_family) {
     theme_bw(base_size = base_size, base_family = base_family) %+replace%
-    theme(
+        theme(
             panel.background = element_blank(),
             plot.background = element_blank(), 
             panel.grid = element_blank(),
@@ -78,30 +79,28 @@ theme_nothing <- function(base_size = 12, base_family = font_family) {
             axis.ticks = element_blank(),
             axis.title = element_blank(),
             axis.line = element_blank(),
-            legend.margin = unit(0, 'mm'),
-            panel.margin = unit(0, 'mm'),
-            axis.ticks.margin = unit(0, 'mm'),
+            panel.spacing = unit(0, 'mm'),
             axis.ticks.length = unit(0, "mm"),
-            legend.margin = unit(0, 'mm'),
+            legend.spacing = unit(0, 'mm'),
+            ## legend.margin = unit(0, 'mm'),
             strip.background = element_blank(),
             line = element_blank(),
             rect = element_blank(),
             text = element_blank(),
             legend.key.size = element_blank(),
             title = element_blank(),
-            plot.margin = unit.c(unit(0,"line"), unit(0,"line"),
-                                 unit(-0.5, "line"),unit(-0.5, "line"))
-    )
+            plot.margin = margin(0, 0, 0, 0, 'line')
+        )
 }
 
 change_logo_col <- function(png, col)
-    {
-        col <- col2rgb(col) / 255
-        png[,,1] <- col[1]
-        png[,,2] <- col[2]
-        png[,,3] <- col[3]
-        return(png)
-    }
+{
+    col <- col2rgb(col) / 255
+    png[,,1] <- col[1]
+    png[,,2] <- col[2]
+    png[,,3] <- col[3]
+    return(png)
+}
 
 ## Get the two logo bitmaps, change their colour, and "grobise" them
 plane_png <- change_logo_col(readPNG('airport.png'), colour_plane)
@@ -136,72 +135,63 @@ ie_val <- ie_val[order(ie_val$location, ie_val$import_export), ]
 
 ## Function to create subplot showing imports/exports next to logo
 ## returns a grob to be subsequently added to map
-make_subplot <- function(loc, max.vol=max(ie_vol$value), max.val=max(ie_val$value))
-    {
-        if(grepl('Airport', loc))  logo <- plane_grob  else  logo <- anchor_grob
+make_subplot <- function(loc, max.vol=max(ie_vol$value), max.val=max(ie_val$value)) {
+    if(grepl('Airport', loc))  logo <- plane_grob  else  logo <- anchor_grob
     
-        vol <- subset(ie_vol, location == loc)
-        val <- subset(ie_val, location == loc)
+    vol <- subset(ie_vol, location == loc)
+    val <- subset(ie_val, location == loc)
 
-        ## Bars for volumes
-        bars_vol <- ggplot() +
-            geom_bar(aes(x=import_export, y=value, fill=import_export), data=vol,
-                     stat='identity', width=1-gap_between_bars) +
-            scale_fill_manual(guide='none', values=c(import=colour_bar_imp_vol,
-                                                export=colour_bar_exp_vol)) +
-            coord_flip(ylim=c(0, max.vol)) + # make bars horizontal
-            scale_x_discrete(expand=rep(gap_outside_bars, 2)) + # remove gaps on both sides
-            scale_y_continuous(expand=c(0,0)) +
-            theme_nothing()
-        ## graduation
-        brks_vol_loc <- brks_vol[brks_vol <= max(vol$value) & brks_vol > 0]
-        if (length(brks_vol_loc)) {
-            graduation_vol <- data.frame(x = rep(brks_vol_loc, each=2),
-                                         y = rep(c(1, 2), length(brks_vol_loc)),
-                                         id= rep(1:length(brks_vol_loc), each=2))
-            bars_vol <- bars_vol + geom_path(aes(x=y, y=x, group=id), data=graduation_vol,
-                                             colour='white', size=0.2, lineend='square')
-        }
-            
-        ## Bars for values
-        bars_val <- ggplot() +
-            geom_bar(aes(x=import_export, y=value, fill=import_export), data=val,
-                     stat='identity', width=1-gap_between_bars) +
-            scale_fill_manual(guide='none', values=c(import=colour_bar_imp_val,
-                                                export=colour_bar_exp_val)) +
-                coord_flip(ylim=c(0, max.val)) + # make bars horizontal
-            scale_x_discrete(expand=rep(gap_outside_bars, 2)) + # remove gaps on both sides
-            scale_y_reverse(expand=c(0,0)) + # remove gaps on both sides
-            theme_nothing()
-        ## graduation
-        brks_val_loc <- brks_val[brks_val <= max(val$value) & brks_val > 0]
-        if (length(brks_val_loc)) {
-            graduation_val <- data.frame(x = rep(brks_val_loc, each=2),
-                                         y = rep(c(1, 2), length(brks_val_loc)),
-                                         id= rep(1:length(brks_val_loc), each=2))
-            bars_val <- bars_val + geom_path(aes(x=y, y=x, group=id), data=graduation_val,
-                                             colour='white', size=0.2, lineend='square')
-        }
-
-        ## Construct subplot - mix of grid and ggplot
-        subplot <- grid.grabExpr({
-            pushViewport(
-                viewport(layout = grid.layout(1, 3,
-                             widths  = unit(c(bars_rel_max_width, 1, bars_rel_max_width),
-                                 rep('grobwidth',3),
-                                 list(plane_grob, plane_grob, plane_grob)),
-                             heights = grobHeight(plane_grob))))
-            pushViewport(viewport(layout.pos.row = 1, layout.pos.col = 1))
-            grid.draw(ggplotGrob(bars_val)) 
-            upViewport()
-            pushViewport(viewport(layout.pos.row = 1, layout.pos.col = 2))
-            grid.draw(logo)
-            upViewport()
-            pushViewport(viewport(layout.pos.row = 1, layout.pos.col = 3))
-            grid.draw(ggplotGrob(bars_vol))
-        })
-        return(subplot)
+    ## Bars for volumes
+    bars_vol <- ggplot() +
+        geom_bar(aes(x=import_export, y=value, fill=import_export), data=vol,
+                 stat='identity', width=1-gap_between_bars) +
+        scale_fill_manual(guide='none', values=c(import=colour_bar_imp_vol,
+                                                 export=colour_bar_exp_vol)) +
+        coord_flip(ylim=c(0, max.vol)) + # make bars horizontal
+        scale_x_discrete(expand=rep(gap_outside_bars, 2)) + # remove gaps on both sides
+        scale_y_continuous(expand=c(0,0)) +
+        theme_nothing()
+    ## graduation
+    brks_vol_loc <- brks_vol[brks_vol <= max(vol$value) & brks_vol > 0]
+    if (length(brks_vol_loc)) {
+        graduation_vol <- data.frame(x = rep(brks_vol_loc, each=2),
+                                     y = rep(c(1, 2), length(brks_vol_loc)),
+                                     id= rep(1:length(brks_vol_loc), each=2))
+        bars_vol <- bars_vol + geom_path(aes(x=y, y=x, group=id), data=graduation_vol,
+                                         colour='white', size=0.2, lineend='square')
     }
+    
+    ## Bars for values
+    bars_val <- ggplot() +
+        geom_bar(aes(x=import_export, y=-value, fill=import_export), data=val,
+                 stat='identity', width=1-gap_between_bars) +
+        scale_fill_manual(guide='none', values=c(import=colour_bar_imp_val,
+                                                 export=colour_bar_exp_val)) +
+        coord_flip(ylim=c(-max.val, 0)) + # make bars horizontal
+        scale_x_discrete(expand=rep(gap_outside_bars, 2)) + # remove gaps on both sides
+        scale_y_reverse(expand=c(0,0)) + # remove gaps on both sides
+        theme_nothing()
+    
+    ## graduation
+    brks_val_loc <- brks_val[brks_val <= max(val$value) & brks_val > 0]
+    if (length(brks_val_loc)) {
+        graduation_val <- data.frame(x = rep(brks_val_loc, each=2),
+                                     y = rep(c(1, 2), length(brks_val_loc)),
+                                     id= rep(1:length(brks_val_loc), each=2))
+        bars_val <- bars_val + geom_path(aes(x=y, y=-x, group=id), data=graduation_val,
+                                         colour='white', size=0.2, lineend='square')
+    }
+
+    ## Construct subplot - mix of grid and ggplot
+    subplot <- arrangeGrob(grobs = list(bars_val, logo, bars_vol),
+                           nrow = 1, ncol = 3,
+                           widths = unit(c(bars_rel_max_width, 1, bars_rel_max_width),
+                                         rep('grobwidth',3),
+                                         list(plane_grob, plane_grob, plane_grob)),
+                           heights = grobHeight(plane_grob))
+
+    return(subplot)
+}
 
 
 ## Create base map (NZ and transport network with traffic)
@@ -222,6 +212,7 @@ brks_vol <- pretty(c(0, max(ie_vol$value)))
 ## Add subplots to base map
 subplot_width <- (2*bars_rel_max_width + 1)*subplot_size
 p1 <- p
+l=unique(ie_vol$location)[1]
 for (l in unique(ie_vol$location)) {
     cat(l, '\n')
     coords <- unique(subset(ports_loc, location==l, select=c('x', 'y')))
@@ -249,7 +240,7 @@ leg.line.width <- 0.8*subplot_size
 nrcols <- length(routes_cols)
 routes_leg <- data.frame(x = rep(c(xmin, xmin+leg.line.width), nrcols),
                          y = rep(ymin + 0:(nrcols-1) * (subplot_size/2 + minor_y_sep),
-                             each=2),
+                                 each=2),
                          id = rep(names(routes_cols), each=2))
 
 ## Legend for roads
@@ -257,11 +248,11 @@ p1.2 <- p1.1 +
     geom_path(aes(x=x, y=y, group=id), data=routes_leg, colour=rep(routes_cols, each=2),
               size=1) +
     gtext(aes(x=rep(xmin + leg.line.width + minor_x_sep, nrcols),
-                  y=ymin + 0:(nrcols-1) * (subplot_size/2 + minor_y_sep),
-                  label=names(routes_cols)), hjust=0) +
+              y=ymin + 0:(nrcols-1) * (subplot_size/2 + minor_y_sep),
+              label=names(routes_cols)), hjust=0) +
     geom_path(aes(x=c(xmin, xmin+leg.line.width),
                   y=rep(ymin+(nrcols+1)*(subplot_size/2 + minor_y_sep),2)),
-                  size=2, colour='black') +
+              size=2, colour='black') +
     gtext(aes(x=xmin+leg.line.width+minor_x_sep,
               y=ymin+(nrcols+1)*(subplot_size/2 + minor_y_sep)),
           label='High volume', hjust=0, vjust=0.5) +
@@ -282,18 +273,18 @@ p2 <- p1.2 +
     annotation_raster(plane_png, xmin, xmin+subplot_size,
                       ymin2-subplot_size-minor_y_sep, ymin2-minor_y_sep) +
     gtext(aes(x = xmin + subplot_size + minor_x_sep,
-                  y = ymin2 + subplot_size/2, label='Seaport'), data=NULL, hjust=0) +
+              y = ymin2 + subplot_size/2, label='Seaport'), data=NULL, hjust=0) +
     gtext(aes(x = xmin + subplot_size + minor_x_sep,
-                  y = ymin2 - minor_y_sep - subplot_size/2, label='Airport'), data=NULL,
+              y = ymin2 - minor_y_sep - subplot_size/2, label='Airport'), data=NULL,
           hjust=0)
 
 
 ###  Legend for import/export value/volume
 add_scales <- function() {
-    downViewport('panel.3-4-3-4')
+    downViewport('panel.7-5-7-5')
     gb <- ggplot_build(p)
-    pushViewport(dataViewport(xscale=gb$panel$ranges[[1]]$x.range,
-                              yscale=gb$panel$ranges[[1]]$y.range,
+    pushViewport(dataViewport(xscale=gb$layout$get_scales(1)$x$get_limits(),
+                              yscale=gb$layout$get_scales(1)$y$get_limits(),
                               clip='off'))
 
     width.mini.bars <- subplot_size/3
@@ -309,32 +300,32 @@ add_scales <- function() {
     grid.rect(x = unit(rep(xmin, 2), 'native'),
               y = unit(y3 + c(1, -1) * (width.mini.bars/2 + tiny.gap), 'native'),
               width  = unit(rep(max(brks_val)/max(ie_val$value) *
-                  subplot_size*bars_rel_max_width, 2), 'native'),
+                                subplot_size*bars_rel_max_width, 2), 'native'),
               height = unit(rep(width.mini.bars, 2), 'native'),
               gp     = gpar(col=rep(NA,2), fill=c(colour_bar_imp_val, colour_bar_exp_val)),
               hjust  = 0, vjust=0.5)
     ## import/export at the end of bars          
     grid.text(c('Import', 'Export'),
               x = unit(rep(xmin, 2) + max(brks_val)/max(ie_val$value) *
-                  subplot_size*bars_rel_max_width + minor_x_sep, 'native'),
+                       subplot_size*bars_rel_max_width + minor_x_sep, 'native'),
               y = unit(y3 + c(1, -1) * (width.mini.bars/2 + tiny.gap), 'native'),
               gp = gpar_text(), hjust=0, vjust=0.5)
     ## ticks
     grid.polyline(x  = unit(rep(xmin + brks_val/max(ie_val$value) *
-                      subplot_size*bars_rel_max_width, each=2), 'native'),
+                                subplot_size*bars_rel_max_width, each=2), 'native'),
                   y  = unit(rep(y3 + 0.5 * c(1, -1) * (tiny.gap + width.mini.bars),
-                      length(brks_val)), 'native'),
+                                length(brks_val)), 'native'),
                   id = rep(brks_val, each=2),
                   gp = gpar(col=c(NA, rep('white', length(brks_val)-2), NA), lwd=0.5,
-                      lineend='square')) # don't display 1st and last tick
+                            lineend='square')) # don't display 1st and last tick
     ## mini axis for scale
     grid.text(brks_val, x=unit(xmin + brks_val/max(ie_val$value) *
-                            subplot_size*bars_rel_max_width, 'native'),
+                               subplot_size*bars_rel_max_width, 'native'),
               y = unit(y3 - (width.mini.bars + tiny.gap), 'native') - unit(0.5,'mm'),
               gp = gpar_text(), vjust=1)
     grid.text('Billion $', 
               x=unit(mean(xmin + brks_val/max(ie_val$value) *
-                  subplot_size*bars_rel_max_width), 'native'),
+                          subplot_size*bars_rel_max_width), 'native'),
               y = unit(y3 - (width.mini.bars + tiny.gap), 'native') - unit(3, 'mm'),
               gp = gpar_text(), vjust=1)
 
@@ -348,32 +339,32 @@ add_scales <- function() {
     grid.rect(x = unit(rep(xmin, 2), 'native'),
               y = unit(y5 + c(1, -1) * (width.mini.bars/2 + tiny.gap), 'native'),
               width  = unit(rep(max(brks_vol)/max(ie_vol$value) *
-                  subplot_size*bars_rel_max_width, 2), 'native'),
+                                subplot_size*bars_rel_max_width, 2), 'native'),
               height = unit(rep(width.mini.bars, 2), 'native'),
               gp     = gpar(col=rep(NA,2), fill=c(colour_bar_imp_vol, colour_bar_exp_vol)),
               hjust  = 0, vjust=0.5)
     ## import/export at the end of bars          
     grid.text(c('Import', 'Export'),
               x = unit(rep(xmin, 2) + max(brks_vol)/max(ie_vol$value) *
-                  subplot_size*bars_rel_max_width + minor_x_sep, 'native'),
+                       subplot_size*bars_rel_max_width + minor_x_sep, 'native'),
               y = unit(y5 + c(1, -1) * (width.mini.bars/2 + tiny.gap), 'native'),
               gp = gpar_text(), hjust=0, vjust=0.5)
     ## ticks
     grid.polyline(x  = unit(rep(xmin + brks_vol/max(ie_vol$value) *
-                      subplot_size*bars_rel_max_width, each=2), 'native'),
+                                subplot_size*bars_rel_max_width, each=2), 'native'),
                   y  = unit(rep(y5 + 0.5 * c(1, -1) * (tiny.gap + width.mini.bars),
-                      length(brks_vol)), 'native'),
+                                length(brks_vol)), 'native'),
                   id = rep(brks_vol, each=2),
                   gp = gpar(col=c(NA, rep('white', length(brks_vol)-2), NA), lwd=0.5,
-                      lineend='square'))
+                            lineend='square'))
     ## mini axis for scale
     grid.text(brks_vol, x=unit(xmin + brks_vol/max(ie_vol$value) *
-                            subplot_size*bars_rel_max_width, 'native'),
+                               subplot_size*bars_rel_max_width, 'native'),
               y = unit(y5 - (width.mini.bars + tiny.gap), 'native') - unit(0.5,'mm'),
               gp = gpar_text(), vjust=1)
     grid.text('Million tonnes', 
               x=unit(mean(xmin + brks_vol/max(ie_vol$value) *
-                  subplot_size*bars_rel_max_width), 'native'),
+                          subplot_size*bars_rel_max_width), 'native'),
               y = unit(y5 - (width.mini.bars + tiny.gap), 'native') - unit(3, 'mm'),
               gp = gpar_text(), vjust=1)
 
@@ -384,14 +375,14 @@ add_scales <- function() {
 
 ###  Main plot function
 print_plot <- function(p) {
-  print(p)
-  add_scales()
-  ## Add main title
-  grid.text('Major New Zealand transport network connections 2013', 0.01, 0.99, just=c(0,1),
-            gp=gpar_title())
-  ## Add sources
-  grid.text('Sources: New Zealand Transport Agency, Statistics New Zealand\nAdjustments for transhipment by sea were made by the Ministry of Transport', x=0.99, y=0.01,
-            just=c(1,0), gp=gpar_source())
+    print(p)
+    add_scales()
+    ## Add main title
+    grid.text('Major New Zealand transport network connections 2013', 0.01, 0.99, just=c(0,1),
+              gp=gpar_title())
+    ## Add sources
+    grid.text('Sources: New Zealand Transport Agency, Statistics New Zealand\nAdjustments for transhipment by sea were made by the Ministry of Transport', x=0.99, y=0.01,
+              just=c(1,0), gp=gpar_source())
 }
 
 
